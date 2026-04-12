@@ -9,7 +9,7 @@ from src.database.mysql_connector import Base
 from src.users.models.user import User
 from src.logs.models.log import Log
 from src.users.models.user_active_token import UserActiveToken
-
+from src.account.models.account import Account
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config

@@ -7,16 +7,18 @@ Suivez les étapes ci-dessous pour configurer votre environnement :
 1. Installez UV, un gestionnaire de paquets Python moderne :
 
    **Sur macOS et Linux :**
+
    ```bash
    curl -LsSf https://astral.sh/uv/install.sh | sh
    ```
-   
+
    **Sur Windows :**
+
    ```powershell
    powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
    ```
 
-    ### Initialisation du projet et création de l'environnement virtuel
+   ## Initialisation du projet et création de l'environnement virtuel
 
     **Windows (PowerShell)** — à la racine du dépôt (`back-pyxis`) :
 
@@ -61,4 +63,3 @@ Suivez les étapes ci-dessous pour configurer votre environnement :
    ```bash
    uvicorn main:app --reload
    ```
-

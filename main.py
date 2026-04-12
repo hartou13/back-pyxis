@@ -17,6 +17,7 @@ set_ip_address()
 from src.auth.routers import auth_router
 from src.users.routers import user_router
 from src.database.mysql_connector import database
+from src.account.routers import account_router
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -42,6 +43,8 @@ async def startup():
 #router inclusion
 app.include_router(auth_router.router)
 app.include_router(user_router.router)
+app.include_router(account_router.router)
+
 @app.middleware("http")
 async def verify_token(request: Request, call_next):
     # print(request)

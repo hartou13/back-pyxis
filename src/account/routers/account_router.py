@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 
+from src.move.services.move_service import get_account_history
 from src.account.dto.account_dto import SimpleNewAccountDto
 from src.users.services.user_service import get_current_user
 from src.account.services.account_service import create_account_service, get_account_service, get_user_accounts_service, update_account_service, delete_account_service
@@ -14,6 +15,11 @@ router = APIRouter(
 @router.post("")
 async def create_account(account: SimpleNewAccountDto, current_user: str = Depends(get_current_user)):
     account = await create_account_service(account, current_user)
+    return account
+
+@router.get("/{account_id}/move-history")
+async def get_account_move_history(account_id: str, current_user: str = Depends(get_current_user), page : int = 1, limit : int = 0):
+    account = await get_account_history(account_id, current_user, page, pageSize=limit)
     return account
 
 @router.get("/{account_id}")

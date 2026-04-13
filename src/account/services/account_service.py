@@ -40,11 +40,16 @@ async def get_user_accounts_service(user_id: str):
 async def update_account_service(account_id: str, account: SimpleNewAccountDto, user_id: str):
     async with get_db() as db:
         result = await db.scalar(select(Account).options(load_only(Account.account_name)).where(Account.id==account_id, Account.user_id==user_id))
+        if account.super_account_id:
+            super_account = await db.scalar(select(Account).options(load_only(Account.id)).where(Account.id==account.super_account_id, Account.user_id==user_id))
+            if (not super_account):
+                raise HTTPException(status_code=404, detail="Super account not found")
+
         if (result):
             result.account_name = account.account_name
             result.account_move_type = account.account_move_type
             result.account_type = account.account_type
-            result.super_account_id = account.super_account_id
+            result.super_account_id = account.super_account_id or None
             await db.commit()
             return result
         raise HTTPException(status_code=404, detail="Account not found")

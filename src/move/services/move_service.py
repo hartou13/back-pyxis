@@ -1,10 +1,11 @@
 from fastapi import HTTPException
 from sqlalchemy import delete, func, insert, or_, select, update
-from src.account.models.account import AccountMoveTypeEnum
+from src.account.models.account import Account, AccountMoveTypeEnum
 from src.account.services.account_service import get_account_service
 from src.database.mysql_connector import get_db
 from src.move.dto.move_dto import MoveDto
 from src.move.models.move import Move
+from sqlalchemy.orm import joinedload, load_only
 
 async def check_move_validity_service(move: MoveDto, current_user_id: str):
     from_account = await get_account_service(move.from_account_id, current_user_id)
@@ -57,7 +58,10 @@ async def delete_move_service(move_id: str, current_user_id: str):
     
 async def get_user_moves_service(current_user_id: str, page: int = 1, pageSize: int = 10):
     async with get_db() as db:
-        base = select(Move).where(Move.user_id == current_user_id)
+        base = select(Move).options(
+            joinedload(Move.from_account).options(load_only(Account.id, Account.account_name, Account.account_move_type, Account.account_type)), 
+            joinedload(Move.to_account).options(load_only(Account.id, Account.account_name, Account.account_move_type, Account.account_type))
+        ).where(Move.user_id == current_user_id)
         total = (await db.execute(select(func.count()).select_from(base.subquery()))).scalar()
         stmt = base.order_by(Move.date.desc()).limit(pageSize).offset((page - 1) * pageSize)
         result = await db.execute(stmt)
@@ -65,7 +69,7 @@ async def get_user_moves_service(current_user_id: str, page: int = 1, pageSize: 
     
 async def get_one_move_service(move_id: str, current_user_id: str):
     async with get_db() as db:
-        result = await db.scalar(select(Move).where(Move.id == move_id, Move.user_id == current_user_id))
+        result = await db.scalar(select(Move).options(joinedload(Move.from_account), joinedload(Move.to_account)).where(Move.id == move_id, Move.user_id == current_user_id))
         if not result:
             raise HTTPException(status_code=404, detail="Move not found")
         return result

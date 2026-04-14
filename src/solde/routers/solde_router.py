@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 
-from src.solde.services.solde_service import refresh_solde_service, refresh_soldes_service
+from src.solde.services.solde_service import get_user_soldes_service, refresh_solde_service, refresh_soldes_service
 from src.users.services.user_service import get_current_user
 
 
@@ -17,3 +17,7 @@ async def refresh_solde(current_user: str = Depends(get_current_user)):
 @router.post("/refresh/{account_id}")
 async def refresh_solde(account_id: str, current_user: str = Depends(get_current_user)):
     return await refresh_solde_service(account_id, current_user)
+
+@router.get("")
+async def get_user_soldes(current_user: str = Depends(get_current_user)):
+    return await get_user_soldes_service(current_user)

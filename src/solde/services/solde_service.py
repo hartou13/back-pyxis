@@ -1,13 +1,14 @@
 from fastapi import HTTPException
 from sqlalchemy import select
-from src.account.services.account_service import get_account_service
+from src.account.models.account import AccountMoveTypeEnum
+from src.account.services.account_service import get_account_service, get_user_accounts_service
 from src.database.mysql_connector import get_db
-from src.move.services.move_service import calculate_accound_solde_service, get_user_soldes_service
+from src.move.services.move_service import calculate_accound_solde_service, calculate_user_soldes_services
 from src.solde.models.solde import Solde
 
 
 async def refresh_soldes_service(current_user_id: str):
-    user_soldes=await get_user_soldes_service(current_user_id)
+    user_soldes=await calculate_user_soldes_services(current_user_id)
     new_soldes = []
     for user_solde in user_soldes:
         new_soldes.append(await update_solde_service(user_solde["id"], user_solde["balance"]))
@@ -47,3 +48,11 @@ async def get_account_solde_service(account_id: str, current_user_id: str):
         if existing_solde:
             return existing_solde
         return refresh_solde_service(account_id, current_user_id)
+    
+async def get_user_soldes_service(current_user_id: str):
+    async with get_db() as db:
+        user_accounts = await get_user_accounts_service(current_user_id, account_move_type=AccountMoveTypeEnum.MOVEMENT)
+        soldes = await db.scalars(select(Solde).where(Solde.account_id.in_([account.id for account in user_accounts])))
+        for user_account in user_accounts:
+            user_account.solde = next((solde for solde in soldes if solde.account_id == user_account.id), None)
+        return user_accounts

@@ -97,7 +97,7 @@ async def get_account_history(account_id: str, current_user_id: str, page: int =
         result = await db.execute(stmt)
         return {"data": result.scalars().all(), "pagination": {"total": total, "page": page, "pageSize": pageSize}}
     
-async def get_user_soldes_service(current_user_id: str):
+async def calculate_user_soldes_services(current_user_id: str):
     async with get_db() as db:
         stmt = select(
             Account.id,

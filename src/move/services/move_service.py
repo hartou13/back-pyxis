@@ -50,8 +50,8 @@ async def update_move_service(move_id: str, move: MoveDto, current_user_id: str)
             result.detail = move.detail
             result.date = move.date 
             if previous_amount != move.amount:
-                await add_to_solde_service(move.from_account_id, move.amount - previous_amount)
-                await add_to_solde_service(move.to_account_id, previous_amount - move.amount)
+                await add_to_solde_service(move.from_account_id, previous_amount - move.amount)
+                await add_to_solde_service(move.to_account_id, move.amount - previous_amount)
             return result
         raise HTTPException(status_code=404, detail="Move not found")
         
@@ -88,7 +88,10 @@ async def get_one_move_service(move_id: str, current_user_id: str):
 async def get_account_history(account_id: str, current_user_id: str, page: int = 1, pageSize: int = 10):
     async with get_db() as db:
         account = await get_account_service(account_id, current_user_id)
-        base = select(Move).where(Move.user_id == current_user_id, or_(Move.from_account_id == account.id, Move.to_account_id == account.id))
+        base = select(Move).options(
+            joinedload(Move.from_account).options(load_only(Account.id, Account.account_name, Account.account_move_type, Account.account_type)), 
+            joinedload(Move.to_account).options(load_only(Account.id, Account.account_name, Account.account_move_type, Account.account_type))
+        ).where(Move.user_id == current_user_id, or_(Move.from_account_id == account.id, Move.to_account_id == account.id))
         total = (await db.execute(select(func.count()).select_from(base.subquery()))).scalar()
         stmt = base.order_by(Move.date.desc()).limit(pageSize).offset((page - 1) * pageSize)
         result = await db.execute(stmt)
@@ -114,7 +117,7 @@ async def get_user_soldes_service(current_user_id: str):
         print(rows)
         return [{"id":row[0], "account_name":row[1], "account_move_type":row[2], "balance":row[3]} for row in rows]
     
-async def get_account_solde_service(account_id: str, current_user_id: str):
+async def calculate_accound_solde_service(account_id: str, current_user_id: str):
     async with get_db() as db:
         stmt = select(
             func.coalesce(

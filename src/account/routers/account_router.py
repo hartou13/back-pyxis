@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 
-from src.move.services.move_service import get_account_history
+from src.solde.services.solde_service import get_account_solde_service
+from src.move.services.move_service import get_account_history, calculate_accound_solde_service
 from src.account.dto.account_dto import SimpleNewAccountDto
 from src.users.services.user_service import get_current_user
 from src.account.services.account_service import create_account_service, get_account_service, get_user_accounts_service, update_account_service, delete_account_service
@@ -25,6 +26,11 @@ async def get_account_move_history(account_id: str, current_user: str = Depends(
 @router.get("/{account_id}")
 async def get_account(account_id: str, current_user: str = Depends(get_current_user)):
     account = await get_account_service(account_id, current_user)
+    return account
+
+@router.get("/{account_id}/solde")
+async def get_account_solde(account_id: str, current_user: str = Depends(get_current_user)):
+    account = await get_account_solde_service(account_id, current_user)
     return account
 
 @router.get("")

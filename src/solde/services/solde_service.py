@@ -1,6 +1,8 @@
+from fastapi import HTTPException
 from sqlalchemy import select
+from src.account.services.account_service import get_account_service
 from src.database.mysql_connector import get_db
-from src.move.services.move_service import get_account_solde_service, get_user_soldes_service
+from src.move.services.move_service import calculate_accound_solde_service, get_user_soldes_service
 from src.solde.models.solde import Solde
 
 
@@ -23,7 +25,7 @@ async def update_solde_service(account_id: str, solde: float):
         return existing_solde
     
 async def refresh_solde_service(account_id: str, current_user_id: str):
-    user_solde = await get_account_solde_service(account_id, current_user_id)
+    user_solde = await calculate_accound_solde_service(account_id, current_user_id)
     new_solde = await update_solde_service(account_id, user_solde[0])
     return new_solde
 
@@ -37,3 +39,11 @@ async def add_to_solde_service(account_id: str, amount: float):
             db.add(existing_solde)
         await db.commit()
         return existing_solde
+    
+async def get_account_solde_service(account_id: str, current_user_id: str):
+    async with get_db() as db:
+        account = await get_account_service(account_id, current_user_id)
+        existing_solde = await db.scalar(select(Solde).where(Solde.account_id == account.id))
+        if existing_solde:
+            return existing_solde
+        return refresh_solde_service(account_id, current_user_id)

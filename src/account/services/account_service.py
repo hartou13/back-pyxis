@@ -27,7 +27,10 @@ async def create_account_service(account: SimpleNewAccountDto, user_id: str):
 
 async def get_account_service(account_id: str, user_id: str):
     async with get_db() as db:
-        result = await db.scalar(select(Account).options(joinedload(Account.super_account)).where(Account.id==account_id, Account.user_id==user_id))
+        result = await db.scalar(select(Account).options(
+            joinedload(Account.super_account),
+            joinedload(Account.sub_accounts).noload(Account.sub_accounts)
+        ).where(Account.id==account_id, Account.user_id==user_id))
         if (result):
             return result
         raise HTTPException(status_code=404, detail="Account not found")

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 
 from src.move.dto.move_dto import MoveDto
-from src.move.services.move_service import create_move_service, delete_move_service, get_one_move_service, get_user_moves_service, update_move_service
+from src.move.services.move_service import create_move_service, delete_move_service, get_account_solde_service, get_one_move_service, get_user_moves_service, get_user_soldes_service, update_move_service
 from src.account.dto.account_dto import SimpleNewAccountDto
 from src.users.services.user_service import get_current_user
 
@@ -27,6 +27,10 @@ async def update_move(move_id: str, move: MoveDto, current_user: str = Depends(g
 @router.delete("/{move_id}")
 async def delete_move(move_id: str, current_user: str = Depends(get_current_user)):
     return await delete_move_service(move_id, current_user)
+
+@router.get("/solde/{account_id}")
+async def get_user_soldes(account_id:str, current_user: str = Depends(get_current_user)):
+    return await get_user_soldes_service( current_user)
 
 @router.get("/{move_id}")
 async def get_move(move_id: str, current_user: str = Depends(get_current_user)):

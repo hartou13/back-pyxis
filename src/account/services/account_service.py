@@ -37,7 +37,7 @@ async def get_account_service(account_id: str, user_id: str):
 
 async def get_user_accounts_service(user_id: str, account_move_type: AccountMoveTypeEnum = None):
     async with get_db() as db:
-        stmt = select(Account).options(load_only(Account.id, Account.account_name, Account.account_move_type, Account.account_type, Account.super_account_id)).where(Account.user_id==user_id)
+        stmt = select(Account).options(load_only(Account.id, Account.account_name, Account.account_move_type, Account.account_type, Account.super_account_id)).where(Account.user_id==user_id).order_by(Account.account_name)
         if (account_move_type):
             stmt = stmt.where(Account.account_move_type==account_move_type)
         result = await db.execute(stmt)

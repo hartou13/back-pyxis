@@ -1,6 +1,8 @@
+from datetime import datetime
 from fastapi import APIRouter, Depends, Query
 
-from src.solde.services.solde_service import get_user_soldes_service, refresh_solde_service, refresh_soldes_service
+from src.move.services.move_service import calculate_user_soldes_services
+from src.solde.services.solde_service import get_user_accounts_evolution, get_user_soldes_service, refresh_solde_service, refresh_soldes_service
 from src.users.services.user_service import get_current_user
 
 
@@ -21,3 +23,7 @@ async def refresh_solde(account_id: str, current_user: str = Depends(get_current
 @router.get("")
 async def get_user_soldes(current_user: str = Depends(get_current_user)):
     return await get_user_soldes_service(current_user)
+
+@router.get("/evolution")
+async def get_user_soldes_evolution(current_user: str = Depends(get_current_user), start_date: datetime = Query(...), end_date: datetime = Query(...)):
+    return await get_user_accounts_evolution(start_date, end_date, current_user)

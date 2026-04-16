@@ -1,3 +1,4 @@
+from datetime import datetime
 from fastapi import HTTPException
 from sqlalchemy import select
 from src.account.models.account import AccountMoveTypeEnum
@@ -52,7 +53,26 @@ async def get_account_solde_service(account_id: str, current_user_id: str):
 async def get_user_soldes_service(current_user_id: str):
     async with get_db() as db:
         user_accounts = await get_user_accounts_service(current_user_id, account_move_type=AccountMoveTypeEnum.MOVEMENT)
-        soldes = await db.scalars(select(Solde).where(Solde.account_id.in_([account.id for account in user_accounts])))
+        soldes = (await db.scalars(select(Solde).where(Solde.account_id.in_([account.id for account in user_accounts])))).all()
+        print("soldes", len(soldes),"accounts", len(user_accounts), sep=" ")
         for user_account in user_accounts:
             user_account.solde = next((solde for solde in soldes if solde.account_id == user_account.id), None)
         return user_accounts
+    
+async def get_user_accounts_evolution(start_date: datetime, end_date: datetime, current_user_id: str):
+    user_accounts = await get_user_accounts_service(current_user_id)
+    evolutions = await calculate_user_soldes_services(current_user_id, start_date, end_date)
+    for user_account in user_accounts:
+        user_account.solde = next((solde for solde in evolutions if solde['id'] == user_account.id), None)
+
+    # Group by account_move_type, initializing all types
+    grouped = {move_type: [] for move_type in AccountMoveTypeEnum}
+    for user_account in user_accounts:
+        move_type = user_account.account_move_type
+        grouped[move_type].append(user_account)
+
+    # Sort each group by solde.balance
+    for move_type in grouped:
+        grouped[move_type].sort(key=lambda x: x.solde["balance"] if x.solde else 0, reverse=True)
+
+    return grouped

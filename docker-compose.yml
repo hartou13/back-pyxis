@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: pyxis-mysql
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-pyxis}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD:-root}
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - pyxis-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+      interval: 10s
+
+  backend:
+    build: .
+    container_name: pyxis-backend
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-pyxis}
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-root}
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      JWT_EXPIRACY: ${JWT_EXPIRACY:-1d}
+      ENV: ${ENV:-dev}
+    ports:
+      - "8001:8001"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - pyxis-network
+    volumes:
+      - .:/app
+    command: uv run uvicorn main:app --host 0.0.0.0 --port 8001 --reload
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  pyxis-network:
+    driver: bridge

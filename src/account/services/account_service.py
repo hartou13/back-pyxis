@@ -68,3 +68,9 @@ async def delete_account_service(account_id: str, user_id: str):
             await db.commit()
             return result
         raise HTTPException(status_code=404, detail="Account not found")
+
+async def get_expense_accounts_service(user_id: str):
+    async with get_db() as db:
+        stmt = select(Account).options(load_only(Account.id, Account.account_name, Account.account_move_type, Account.account_type, Account.super_account_id)).where(Account.user_id==user_id, Account.account_move_type==AccountMoveTypeEnum.EXPENSE).order_by(Account.account_name)
+        result = await db.execute(stmt)
+        return result.scalars().all()

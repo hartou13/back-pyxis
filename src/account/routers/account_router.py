@@ -4,7 +4,7 @@ from src.solde.services.solde_service import get_account_solde_service
 from src.move.services.move_service import calculate_account_tendency_daily_service, calculate_account_tendency_service, calculate_account_tendency_weekly_service, get_account_history, calculate_accound_solde_service
 from src.account.dto.account_dto import SimpleNewAccountDto
 from src.users.services.user_service import get_current_user
-from src.account.services.account_service import create_account_service, get_account_service, get_user_accounts_service, update_account_service, delete_account_service
+from src.account.services.account_service import create_account_service, get_account_service, get_user_accounts_service, update_account_service, delete_account_service, get_expense_accounts_service
 
 
 router = APIRouter(
@@ -62,3 +62,8 @@ async def update_account(account_id: str, account: SimpleNewAccountDto, current_
 async def delete_account(account_id: str, current_user: str = Depends(get_current_user)):
     account = await delete_account_service(account_id, current_user)
     return account
+
+@router.get("/expense")
+async def get_expense_accounts(current_user: str = Depends(get_current_user)):
+    accounts = await get_expense_accounts_service(current_user)
+    return accounts

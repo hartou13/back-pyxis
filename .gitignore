@@ -210,3 +210,4 @@ env/*
 **cache*/*
 *.pyc
 alembic/versions/*
+.marcus/

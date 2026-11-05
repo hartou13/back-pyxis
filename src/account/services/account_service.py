@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from sqlalchemy import insert, select
 from src.database.mysql_connector import get_db
 from src.account.dto.account_dto import SimpleNewAccountDto
-from src.account.models.account import Account, AccountMoveTypeEnum
+from src.account.models.account import Account, AccountMoveTypeEnum, AccountTypeEnum
 from sqlalchemy.orm import load_only, joinedload
 
 async def create_account_service(account: SimpleNewAccountDto, user_id: str):
@@ -35,11 +35,13 @@ async def get_account_service(account_id: str, user_id: str):
             return result
         raise HTTPException(status_code=404, detail="Account not found")
 
-async def get_user_accounts_service(user_id: str, account_move_type: AccountMoveTypeEnum = None):
+async def get_user_accounts_service(user_id: str, account_move_type: AccountMoveTypeEnum = None, account_type: AccountTypeEnum = None):
     async with get_db() as db:
         stmt = select(Account).options(load_only(Account.id, Account.account_name, Account.account_move_type, Account.account_type, Account.super_account_id)).where(Account.user_id==user_id).order_by(Account.account_name)
         if (account_move_type):
             stmt = stmt.where(Account.account_move_type==account_move_type)
+        if (account_type):
+            stmt = stmt.where(Account.account_type==account_type)
         result = await db.execute(stmt)
         return result.scalars().all()
         

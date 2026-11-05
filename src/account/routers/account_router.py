@@ -1,3 +1,4 @@
+from src.account.models.account import AccountMoveTypeEnum, AccountTypeEnum
 from fastapi import APIRouter, Depends
 
 from src.solde.services.solde_service import get_account_solde_service
@@ -49,8 +50,8 @@ async def get_account_solde(account_id: str, current_user: str = Depends(get_cur
     return account
 
 @router.get("")
-async def get_user_accounts(current_user: str = Depends(get_current_user)):
-    accounts = await get_user_accounts_service(current_user)
+async def get_user_accounts(current_user: str = Depends(get_current_user), account_move_type: AccountMoveTypeEnum = None, account_type: AccountTypeEnum = None):
+    accounts = await get_user_accounts_service(current_user, account_move_type, account_type)
     return accounts
 
 @router.put("/{account_id}")
